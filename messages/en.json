@@ -1,0 +1,78 @@
+{
+  "Metadata": {
+    "title": "LikeWise – reviews from people like you",
+    "description": "Find places, trails and restaurants through reviews from people who are like you."
+  },
+  "Header": {
+    "home": "Home",
+    "signIn": "Sign in",
+    "account": "My account",
+    "guest": "Guest",
+    "switchLanguage": "עברית"
+  },
+  "Home": {
+    "tagline": "Reviews from people like you",
+    "intro": "Tell us who you are right now and what you're looking for. We'll find what people like you loved, across every platform.",
+    "whoLabel": "Who are you right now?",
+    "whoPlaceholder": "e.g. an Israeli family with 4 little kids",
+    "whatLabel": "What are you looking for?",
+    "whatPlaceholder": "e.g. an easy hiking trail with water, in August",
+    "whereLabel": "Where?",
+    "nearMe": "Near me",
+    "chooseArea": "Somewhere else",
+    "areaPlaceholder": "City, region or place",
+    "windowLabel": "Reviews from",
+    "window6": "the last 6 months",
+    "window12": "the last year",
+    "window24": "the last 2 years",
+    "window36": "the last 3 years",
+    "window60": "the last 5 years",
+    "search": "Search",
+    "comingSoon": "The search engine is under construction and arrives in the next development phase.",
+    "examplesTitle": "Ideas",
+    "example1Who": "A dad with a 10-year-old son",
+    "example1What": "Easy hiking trails with water",
+    "example2Who": "Two friends in our 30s",
+    "example2What": "Restaurants with a great vibe",
+    "example3Who": "A family with toddlers and a stroller",
+    "example3What": "Kid-friendly museums"
+  },
+  "Auth": {
+    "title": "Sign in to LikeWise",
+    "subtitle": "Save personas, favorites and your search history.",
+    "google": "Continue with Google",
+    "or": "or",
+    "emailLabel": "Email address",
+    "emailPlaceholder": "name@example.com",
+    "sendCode": "Email me a code",
+    "codeSent": "We sent a 6-digit code to {email}. You can also tap the link in the email.",
+    "codeLabel": "Verification code",
+    "verify": "Verify",
+    "changeEmail": "Use a different email",
+    "close": "Close",
+    "signOut": "Sign out",
+    "notConfigured": "Sign-in isn't configured in this environment yet.",
+    "genericError": "Something went wrong. Please try again.",
+    "invalidCode": "That code is wrong or has expired."
+  },
+  "Me": {
+    "title": "My account",
+    "signedInAs": "Signed in as {email}",
+    "guestNotice": "You're browsing as a guest. Sign in to keep your searches.",
+    "notSignedIn": "You're not signed in yet.",
+    "personas": "My personas",
+    "history": "Search history",
+    "favorites": "Favorites",
+    "myReviews": "My reviews",
+    "soon": "Coming soon"
+  },
+  "Offline": {
+    "title": "You're offline",
+    "body": "It looks like you're not connected. Try again when you're back online.",
+    "retry": "Try again"
+  },
+  "NotFound": {
+    "title": "Page not found",
+    "back": "Back to home"
+  }
+}

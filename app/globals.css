@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --surface-2: #f1f3ee;
+  --ink: #1b2421;
+  --muted: #5b6b66;
+  --line: #e2e6e0;
+  --brand: #0e7c66;
+  --brand-strong: #0a5f4e;
+  --brand-ink: #ffffff;
+  --brand-soft: #dff2ec;
+  --accent: #e8604c;
+  --danger: #b42318;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1513;
+    --surface: #17201d;
+    --surface-2: #1e2925;
+    --ink: #e8eeeb;
+    --muted: #9aaaa4;
+    --line: #2a3632;
+    --brand: #3cc0a0;
+    --brand-strong: #5fd4b7;
+    --brand-ink: #06231c;
+    --brand-soft: #16362e;
+    --accent: #ff8a78;
+    --danger: #ff7b6e;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-soft: var(--brand-soft);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-heebo), system-ui, sans-serif;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+}
+
+dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
