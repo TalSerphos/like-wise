@@ -9,8 +9,8 @@ It's an installable web app (PWA) in Hebrew and English. The full product and te
 | Phase | Scope | State |
 |---|---|---|
 | 0 | Foundations: app shell, Hebrew/English + RTL, PWA, database schema, sign-in | ✅ done |
-| 1 | Place & review sources (Google, TripAdvisor, DataForSEO) | next |
-| 2 | AI understanding & "people like me" matching | |
+| 1 | Place & review sources (Google, TripAdvisor, DataForSEO) | waiting for API keys |
+| 2 | AI understanding & "people like me" matching | 🟡 scoring done; AI reading + model comparison wait for an Anthropic API key |
 | 3 | Search experience (progressive results, tabs, map, summaries) | |
 | 4 | Personas, history, favorites, sharing, feedback, guest limit | |
 | 5 | In-app reviews | |
@@ -51,7 +51,10 @@ app/[locale]/        pages (he / en)
 app/auth/callback/   OAuth + email-link sign-in callback
 components/          UI
 i18n/                locale routing
-lib/                 supabase, auth helpers (and later: sources, ai, matching)
+lib/ai/schemas.ts    persona + search-intent shapes shared by AI and scoring
+lib/matching/        "people like me" scoring: similarity, like-me rating,
+                     recency/season weights, smart radius, persona cache key
+lib/                 supabase and auth helpers
 messages/            he.json, en.json
 proxy.ts             locale routing + session refresh (Next 16's "middleware")
 public/sw.js         service worker (offline fallback)

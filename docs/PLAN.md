@@ -25,8 +25,8 @@ The repo (`talserphos/like-wise`) is empty, so this is a new build. All work goe
 | Accounts | Google sign-in + email **magic link / 6-digit code**. Guests get **2 free searches**, then sign up |
 | v1 features | Saved personas, search history & favorites, share results, "is this really like me?" feedback |
 | In-app reviews | **Yes in v1**, shown mixed with the others with a LikeWise badge. Author shown as **persona only, no name** |
-| AI models | **Claude Haiku 4.5** for bulk review reading (`claude-haiku-4-5`). **Claude Sonnet 5** for query understanding and summaries (`claude-sonnet-5`) |
-| Budget | Data + AI **monthly cap $300** (hosting uses free tiers at first) |
+| AI models | Starting mix: **Claude Haiku 4.5** for bulk review reading (`claude-haiku-4-5`), **Claude Sonnet 5** for query understanding and summaries (`claude-sonnet-5`). **Final choice is made with data in Phase 2**: a side-by-side comparison on the labeled eval set (accuracy + real cost), and the user picks |
+| Budget | Data + AI **monthly cap $300** (confirmed). Headroom above the ~$80–110 baseline can go to stronger models if the Phase 2 comparison shows it's worth it. Hosting uses free tiers at first |
 | Validation | Repeat usage + match-quality feedback. Deeper KPIs to be designed once running |
 | Stack | Next.js (TypeScript) + Supabase + Vercel + Inngest + Claude (my pick; user had no preference) |
 
@@ -60,7 +60,7 @@ Hiking trails come from Google (`hiking_area`, parks) and TripAdvisor attraction
                                                                 Sonnet 5 (parse query, summarize)
 ```
 
-- **Frontend:** Next.js 15+ (App Router, TypeScript), Tailwind (logical properties for RTL), `next-intl` (he/en), a small hand-written service worker (`public/sw.js`; Serwist's plugin needs webpack, while Next 16 builds with Turbopack), Google Maps JS (Advanced Markers), PostHog for analytics.
+- **Frontend:** Next.js 15+ (App Router, TypeScript), Tailwind (logical properties for RTL), `next-intl` (he/en), Serwist for PWA/service worker, Google Maps JS (Advanced Markers), PostHog for analytics.
 - **Backend:** Next.js route handlers plus **Inngest** for the long multi-step search job. Vendor calls take 30–90 s, which is too long for one serverless request, and Inngest gives retries, per-source concurrency limits, and a nightly pre-warm cron. Results are written row by row to Postgres, and the client gets live updates via **Supabase Realtime**.
 - **DB:** Supabase Postgres + PostGIS (radius queries), plus pg_trgm for place dedupe.
 - **Auth:** Supabase Auth with Google OAuth + email OTP (magic link **and** 6-digit code; the code matters because magic links open in the browser, not the installed PWA). **Anonymous sign-in** for guests, upgraded in place on signup so their history is kept.
@@ -114,9 +114,9 @@ Nightly Inngest cron: **pre-warm** popular areas from search history (top Israel
   - `recency = 0.5^(ageMonths/18)`.
   - `season = 1.3` if the visit month is within ±1 month of the trip month and the intent is season-sensitive. Same place means same hemisphere, so no hemisphere logic is needed.
 - **Like-me rating** (Bayesian): `(Σ w·r + k·R_all) / (Σ w + k)`, k = 2.
-  - **Confidence** from the effective sample size `n_eff = (Σw)²/Σw²`: low <2.5, medium <6, high ≥6.
+  - **Confidence** from the evidence `min(Σw, n_eff)`, where `n_eff = (Σw)²/Σw²`: low <2.5, medium <6, high ≥6. `Σw` counts how much like-you evidence there is, and `n_eff` guards against one review dominating. (`n_eff` alone ignores match strength, so ten weak matches would read as high confidence.)
   - Display: "4.7★ from 9 people like you · high confidence · Everyone 4.1★ (1,240)".
-- **Place rank** (Like-me tab): `R_like − 0.5/√(1+n_eff) + relevance − distancePenalty`. The Everyone tab uses the classic overall rating.
+- **Place rank** (Like-me tab): `R_like − 0.5/√(1+evidence) + relevance − distancePenalty`. The Everyone tab uses the classic overall rating.
 - Reddit has no stars. Haiku infers 1–5 from sentiment, and the rating is marked "inferred".
 - **Persona key:** a canonical string of coarse buckets (e.g. `party=family;kids=toddler,child;bg=IL,he,kosher;access=stroller`, no tags). It drives cache sharing between similar users.
 
@@ -140,7 +140,7 @@ Nightly Inngest cron: **pre-warm** popular areas from search history (top Israel
 - `profiles`: user_id, ui_lang, is_guest, guest_searches_used, consent flags
 - `personas`: id, user_id, label, raw_text, parsed jsonb, persona_key
 - `places`: id, name_en, name_local, geog (PostGIS), categories, google_place_id, tripadvisor_location_id, overall ratings/counts per source, reviews_fetched_at
-- `reviews`: id, place_id, source (google | tripadvisor | reddit | likewise), source_review_id (unique per source), author_meta jsonb (hometown, trip_type), rating, rating_inferred, body, lang, published_at, visited_at, url, author_user_id (likewise only), moderation_status
+- `reviews`: id, place_id, source (google | tripadvisor | reddit | likewise), source_review_id (unique per source), author_meta jsonb (hometown, trip_type), rating, rating_inferred, text, lang, published_at, visited_at, url, author_user_id (likewise only), moderation_status
 - `review_personas`: review_id, extractor_version, persona jsonb, evidence
 - `review_translations`: review_id, lang, text
 - `searches`: id, user_id, persona_text, persona_parsed, target_text, intent jsonb, center geog, radius_km, window_months, trip_month, status, share_slug, cache_key
@@ -166,6 +166,16 @@ Row-level security on every user-owned table. Guest limit enforced server-side, 
 | **Total** | **~$80–110/mo** |
 
   That leaves about 3× headroom under $300. Official Google/TripAdvisor usage should stay within free tiers.
+- Model options the Phase 2 comparison will price with real numbers (same usage assumptions, including ~$20 of review data):
+
+| Mix | Estimate |
+|---|---|
+| Haiku 4.5 reads reviews, Sonnet 5 summarizes (starting mix) | ~$80–110/mo |
+| Same mix, deeper coverage (150 Google + 60 TripAdvisor per place) | ~$120–160/mo |
+| Sonnet 5 for everything | ~$150–170/mo |
+| Sonnet 5 reads, Opus 5 (`claude-opus-5`) summarizes | ~$170–200/mo |
+
+  Nightly pre-warm runs through the Message Batches API at half price, which lowers all of these somewhat.
 - Hosting starts free: Vercel Hobby, Supabase Free, Inngest, PostHog, Resend. Upgrade Supabase to Pro ($25) once testers are active, to avoid auto-pause.
 
 ## Repo layout
@@ -193,9 +203,12 @@ docs/PLAN.md (this plan, committed in Phase 0)
 
 ## Phases (each one ends with a push to the branch and a user test)
 
-**0. Foundations**
-- Next.js + TS + Tailwind + next-intl (he default, en) + RTL, PWA manifest + service worker, Supabase project + migrations, auth (Google, email OTP, anonymous).
-- CI: lint, typecheck, vitest. Commit `docs/PLAN.md`.
+On approval of this revision, first sync `docs/PLAN.md` in the repo with this file (one commit). Then continue: the Phase 2 matching math and its unit tests need no keys and can start right away. Phase 1 needs the Google/TripAdvisor/DataForSEO keys, and the Phase 2 model comparison needs `ANTHROPIC_API_KEY`.
+
+**0. Foundations** ✅ done (commits `be1af77`, `ce1767b`; CI green)
+- Next.js 16 + TS + Tailwind + next-intl (he default, en) + RTL, PWA manifest + hand-written service worker (Serwist's plugin needs webpack; Next 16 builds with Turbopack), Supabase migration with RLS + explicit least-privilege grants, auth (Google, email OTP, anonymous guest with in-place upgrade).
+- CI: lint, typecheck, Vitest, build, plus `scripts/db-test.sh` (migration + RLS tests on a fresh Postgres/PostGIS database). `docs/PLAN.md` and `docs/SETUP.md` committed.
+- Not yet verified: live sign-in, which needs the user's Supabase project.
 - **User action day 1:** create keys/accounts (list below), **apply for Reddit API access**.
 
 **1. Sources & ingestion (starts with a spike)**
@@ -205,6 +218,7 @@ docs/PLAN.md (this plan, committed in Phase 0)
 **2. AI understanding & matching**
 - Zod schemas, `parseSearch`, batched `extractReviewPersonas` with caching.
 - Hand-labeled eval set: ~150 reviews (Hebrew/English/other) + ~40 persona texts.
+- **Model comparison** (the user's budget decision): run review reading with Haiku 4.5 and Sonnet 5, and summaries with Sonnet 5 and Opus 5, on the same eval set. Report per-field accuracy (Hebrew separately), a blind side-by-side of sample summaries, and measured cost per 1,000 reviews / per summary, projected to monthly cost. The user picks a mix, and it's set in `lib/ai/models.ts`.
 - Similarity/rating/season/radius/persona-key modules with unit tests.
 
 **3. Search experience**
